@@ -8,22 +8,12 @@ from colorama import Fore, Back, Style
 class BaseAdventure:
     """This is a base class for all of our adventure objects."""
 
-    def __init__(self, name, output=sys.stdout):
+    def __init__(self, name):
         self.name = name
-        self.output = output
         self.description = ""
 
-    def out(self, text):
-        """Write the text to the object's stream variable.
-
-        Output text to the output, in this way an adventure
-        could be instantiated such that the output was to a file, perhaps
-        for HTML, rather than soley to the screen.
-        """
-        self.output.write(text)
-
     def look(self):
-        self.out(self.description)
+        return self.description
 
 
 class Character(BaseAdventure):
@@ -64,6 +54,8 @@ class Game:
         command = commandstr.split()
         if "go" == command[0]:
             self.maincharacter.move(command[1])
+        if "look" == command[0]:
+            self.maincharacter.look()
 
     def run(self):
         colorama.init(autoreset=True)  # automatically reset colors
