@@ -1,7 +1,8 @@
 #!/usr/bin/env python27
 # -*- coding: utf-8 -*-
-import colorama
 import sys
+import yaml
+import colorama
 from colorama import Fore, Back, Style
 
 
@@ -14,6 +15,12 @@ class BaseAdventure:
 
     def look(self):
         return self.description
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return self.name
 
 
 class Character(BaseAdventure):
@@ -31,20 +38,31 @@ class Character(BaseAdventure):
             print "You don't see any way to go {}".format(direction)
 
     def drop(self, item):
-        item = self.location.remove(item)
-        if item:
-            self.location.push(item)
-        else:
+        try:
+            self.location.inventory.push(self.location.remove(item))
+        except:
             print "Couldn't drop {}".format(item)
 
+    def take(self, item):
+        try:
+            self.inventory.push(self.location.inventory.remove(item))
+        except:
+            print "Couldn't take {}".format(item)
+
     def look(self):
-        print self.location.look()
+        look_str = "You find yourself in {}\n {}\n Objects: {}\n Exits: {}"
+        return look_str.format(
+            self.location,
+            self.location.description,
+            self.location.inventory,
+            self.location.exits)
 
 
 class Area(BaseAdventure):
     def __init__(self, name, description):
-        self.exits = dict()
+        self.name = name
         self.description = description
+        self.exits = dict()
         self.inventory = []
 
     def addPath(self, direction, area):
@@ -52,8 +70,13 @@ class Area(BaseAdventure):
 
 
 class Item(BaseAdventure):
-    def put(self, location):
-        location.inventory.push(self)
+    def __init__(self, name, description, hidden=False):
+        self.name = name
+        self.description = description
+        self.hidden = hidden
+
+    def __str__(self):
+        return ''.join([Fore.BLUE, self.name])
 
 
 class Game:
@@ -68,12 +91,17 @@ class Game:
         if "go" == command[0]:
             self.maincharacter.move(command[1])
         if "look" == command[0]:
-            self.maincharacter.look()
+            print self.maincharacter.look()
+        if "take" == command[0]:
+            self.maincharacter.take(command[1])
+        if "drop" == command[0]:
+            self.maincharacter.drop(command[1])
 
     def run(self):
         colorama.init(autoreset=True)  # automatically reset colors
         prompt_str = ''.join(['\n', Fore.RED, '> '])
         try:
+            print self.maincharacter.look()
             while True:
                 commandstr = raw_input(prompt_str).lower().strip()
                 if not commandstr:
