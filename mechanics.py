@@ -8,9 +8,9 @@ from colorama import Fore, Back, Style
 class BaseAdventure:
     """This is a base class for all of our adventure objects."""
 
-    def __init__(self, name):
+    def __init__(self, name, description):
         self.name = name
-        self.description = ""
+        self.description = description
 
     def look(self):
         return self.description
@@ -20,33 +20,46 @@ class Character(BaseAdventure):
     def __init__(self, name, startarea):
         self.name = name
         self.location = startarea
-        self.inventory = dict()
+        self.inventory = []
 
     def move(self, direction):
-        if self.location.exits[direction]:
+        area = self.location.exits.get(direction, None)
+        if area:
             self.location = self.location.exits[direction]
             self.look()
+        else:
+            print "You don't see any way to go {}".format(direction)
+
+    def drop(self, item):
+        item = self.location.remove(item)
+        if item:
+            self.location.push(item)
+        else:
+            print "Couldn't drop {}".format(item)
 
     def look(self):
         print self.location.look()
 
 
 class Area(BaseAdventure):
-    # it my be cool to try and use with Area(blarg) as room:
-    # we would need to define __enter__ and __exit__
-    def __init__(self, name):
+    def __init__(self, name, description):
         self.exits = dict()
+        self.description = description
+        self.inventory = []
 
     def addPath(self, direction, area):
         self.exits[direction] = area
 
 
+class Item(BaseAdventure):
+    def put(self, location):
+        location.inventory.push(self)
+
+
 class Game:
     def __init__(self):
-        first = Area("first")
-        first.description = "this is first area"
-        second = Area("second")
-        second.description = "this is the second area"
+        first = Area("first", "this is first area")
+        second = Area("second", "this is the second area")
         first.addPath("south", second)
         self.maincharacter = Character("ranman", first)
 
